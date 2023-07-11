@@ -1,7 +1,7 @@
-import Model.Epic;
-import Model.Manager;
-import Model.Subtask;
-import Model.Task;
+import model.Epic;
+import model.Manager;
+import model.Subtask;
+import model.Task;
 
 public class Main {
 

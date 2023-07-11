@@ -1,4 +1,4 @@
-package Model;
+package model;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -7,9 +7,9 @@ public class Manager {
 
     private int newTaskId = 0;
 
-    private HashMap<Integer, Task> taskDatabase = new HashMap<>();
-    private HashMap<Integer, Epic> epicDatabase = new HashMap<>();
-    private HashMap<Integer, Subtask> subtaskDatabase = new HashMap<>();
+    private HashMap<Integer, Task> taskMap = new HashMap<>();
+    private HashMap<Integer, Epic> epicMap = new HashMap<>();
+    private HashMap<Integer, Subtask> subtaskMap = new HashMap<>();
 
     private int generateNewId() {
         return ++newTaskId;
@@ -20,35 +20,35 @@ public class Manager {
     public Task createTask(Task task) {
         int id = generateNewId();
         task.setId(id);
-        taskDatabase.put(id, task);
+        taskMap.put(id, task);
         return task;
     }
 
     public Task getTaskById(int searchedTaskId) {
-        return taskDatabase.get(searchedTaskId);
+        return taskMap.get(searchedTaskId);
     }
 
     public ArrayList<Task> getAllTasks() {
-        return new ArrayList(taskDatabase.values());
+        return new ArrayList(taskMap.values());
     }
 
     public void updateTask(Task task) {
-        Task checkTask = taskDatabase.get(task.getId());
+        Task checkTask = taskMap.get(task.getId());
 
         if (checkTask == null) {
             System.out.println("Обновление статуса несуществующей задачи: " + task);
             return;
         } else {
-            taskDatabase.put(task.getId(), task);
+            taskMap.put(task.getId(), task);
         }
     }
 
     public void deleteTask(int id) {
-        taskDatabase.remove(id);
+        taskMap.remove(id);
     }
 
     public void deleteAllTasks() {
-        taskDatabase.clear();
+        taskMap.clear();
     }
 
     // Работа с Epic
@@ -56,16 +56,16 @@ public class Manager {
     public Epic createEpic(Epic epic) {
         int id = generateNewId();
         epic.setId(id);
-        epicDatabase.put(id, epic);
+        epicMap.put(id, epic);
         setEpicStatus(epic);
         return epic;
     }
 
-    public void setEpicStatus(Epic epic) {
+    private void setEpicStatus(Epic epic) {
         ArrayList<String> subtaskStatuses = new ArrayList<>();
 
         for (Integer id : epic.getSubtaskIds()) {
-            Subtask subtask = subtaskDatabase.get(id);
+            Subtask subtask = subtaskMap.get(id);
             subtaskStatuses.add(subtask.status);
         }
         if (subtaskStatuses.contains("NEW") && subtaskStatuses.contains("DONE")
@@ -81,21 +81,22 @@ public class Manager {
     }
 
     public Epic getEpicById(int searchedEpicId) {
-        return epicDatabase.get(searchedEpicId);
+        return epicMap.get(searchedEpicId);
     }
 
     public ArrayList<Epic> getAllEpics() {
-        return new ArrayList(epicDatabase.values());
+        return new ArrayList(epicMap.values());
     }
 
     public void updateEpic(Epic epic) {
-        Epic checkEpic = epicDatabase.get(epic.getId());
+        Epic checkEpic = epicMap.get(epic.getId());
 
         if (checkEpic == null) {
             System.out.println("Обновление статуса несуществующей задачи: " + epic);
             return;
         } else {
-            epicDatabase.put(epic.getId(), epic);
+            checkEpic.setName(epic.getName());
+            checkEpic.setDescription(epic.getDescription());
         }
     }
 
@@ -103,19 +104,24 @@ public class Manager {
         ArrayList<Subtask> currentEpicSubtasks = new ArrayList<>();
 
         for (int id: epic.subtaskIds) {
-            Subtask subtask = subtaskDatabase.get(id);
+            Subtask subtask = subtaskMap.get(id);
             currentEpicSubtasks.add(subtask);
         }
         return currentEpicSubtasks;
     }
 
     public void deleteEpic(int id) {
-        epicDatabase.remove(id);
+        ArrayList<Integer> subtaskIdsCopy = new ArrayList<>(getEpicById(id).subtaskIds);
+        for (int i = 0; i < subtaskIdsCopy.size(); i++) {
+            int subtaskId = subtaskIdsCopy.get(i);
+            deleteSubtask(subtaskId);
+        }
+        epicMap.remove(id);
     }
 
     public void deleteAllEpics() {
-        subtaskDatabase.clear();
-        epicDatabase.clear();
+        subtaskMap.clear();
+        epicMap.clear();
     }
 
     // Работа с Subtask
@@ -123,42 +129,48 @@ public class Manager {
     public Subtask createSubtask(Subtask subtask) {
         int id = generateNewId();
         subtask.setId(id);
-        Epic selectedEpic = epicDatabase.get(subtask.getEpicId());
-        selectedEpic.subtaskIds.add(subtask.getId());
-        subtaskDatabase.put(id, subtask);
-        setEpicStatus(selectedEpic);
-        return subtask;
+        Epic selectedEpic = epicMap.get(subtask.getEpicId());
+        if (selectedEpic == null) {
+            System.out.println("Эпика для указанной подзадачи не существует");
+        } else {
+            selectedEpic.addSubtask(subtask.getId());
+            subtaskMap.put(id, subtask);
+            setEpicStatus(selectedEpic);
+        } return subtask;
     }
 
     public Subtask getSubtaskById(int searchedSubtaskId) {
-        return subtaskDatabase.get(searchedSubtaskId);
+        return subtaskMap.get(searchedSubtaskId);
     }
 
     public ArrayList<Subtask> getAllSubtasks() {
-        return new ArrayList(subtaskDatabase.values());
+        return new ArrayList(subtaskMap.values());
     }
 
     public void updateSubtask(Subtask subtask) {
-        Subtask checkSubtask = subtaskDatabase.get(subtask.getId());
+        Subtask checkSubtask = subtaskMap.get(subtask.getId());
 
         if (checkSubtask == null) {
             System.out.println("Обновление статуса несуществующей задачи: " + subtask);
             return;
         } else {
-            subtaskDatabase.put(subtask.getId(), subtask);
-            setEpicStatus(epicDatabase.get(subtask.getEpicId()));
+            subtaskMap.put(subtask.getId(), subtask);
+            setEpicStatus(epicMap.get(subtask.getEpicId()));
         }
     }
 
     public void deleteSubtask(Integer id) {
-        Subtask selectedSubtask = subtaskDatabase.get(id);
-        Epic selectedEpic = epicDatabase.get(selectedSubtask.getEpicId());
-        subtaskDatabase.remove(id);
-        selectedEpic.subtaskIds.remove(id);
+        Subtask selectedSubtask = subtaskMap.get(id);
+        Epic selectedEpic = epicMap.get(selectedSubtask.getEpicId());
+        subtaskMap.remove(id);
+        selectedEpic.removeSubtask(id);
         setEpicStatus(selectedEpic);
     }
 
     public void deleteAllSubtasks() {
-        subtaskDatabase.clear();
+        subtaskMap.clear();
+        for (Epic epic: epicMap.values()) {
+            setEpicStatus(epic);
+        }
     }
 }
