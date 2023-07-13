@@ -1,5 +1,5 @@
 import model.Epic;
-import model.Manager;
+import service.Manager;
 import model.Subtask;
 import model.Task;
 

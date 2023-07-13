@@ -1,4 +1,8 @@
-package model;
+package service;
+
+import model.Epic;
+import model.Subtask;
+import model.Task;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -111,7 +115,7 @@ public class Manager {
     }
 
     public void deleteEpic(int id) {
-        ArrayList<Integer> subtaskIdsCopy = new ArrayList<>(getEpicById(id).subtaskIds);
+        ArrayList<Integer> subtaskIdsCopy = new ArrayList<>(getEpicById(id).getSubtaskIds());
         for (int i = 0; i < subtaskIdsCopy.size(); i++) {
             int subtaskId = subtaskIdsCopy.get(i);
             deleteSubtask(subtaskId);
