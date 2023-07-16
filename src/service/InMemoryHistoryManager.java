@@ -2,17 +2,16 @@ package service;
 
 import model.Task;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.LinkedList;
 
 public class InMemoryHistoryManager implements HistoryManager {
 
     private static final int MAX_HISTORY_SIZE = 10;
-    private final List<Task> history = new ArrayList<>();
+    private final LinkedList<Task> history = new LinkedList<>();
 
     @Override
-    public List<Task> getHistory() {
-        return history;
+    public LinkedList<Task> getHistory() {
+        return new LinkedList<>(history);
     }
 
     @Override
@@ -26,7 +25,7 @@ public class InMemoryHistoryManager implements HistoryManager {
 
     private void clearExcessHistory() {
         if (history.size() > MAX_HISTORY_SIZE) {
-            history.remove(0);
+            history.removeFirst();
         }
     }
 }

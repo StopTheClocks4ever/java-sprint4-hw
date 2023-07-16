@@ -94,9 +94,11 @@ public class Main {
 
         inMemoryTaskManager.getEpicById(6);
 
+        List<Task> historyFull = inMemoryTaskManager.getHistory();
+
         System.out.println("История просмотров задач: ");
 
-        for (Task element : history) {
+        for (Task element : historyFull) {
             System.out.println(element);
         }
     }
